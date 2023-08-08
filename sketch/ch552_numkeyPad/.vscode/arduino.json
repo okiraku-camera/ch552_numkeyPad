@@ -1,0 +1,6 @@
+{
+    "configuration": "clock=24internal,usb_settings=user148,upload_method=usb",
+    "board": "CH55xDuino:mcs51:ch552",
+    "sketch": "ch552_numkeyPad.ino",
+    "output": "./build"
+}
