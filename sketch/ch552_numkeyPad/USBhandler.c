@@ -453,15 +453,14 @@ void USBInterrupt(void) { // inline not really working in multiple files in SDCC
   // USB bus suspend / wake up
   if (UIF_SUSPEND) {
     UIF_SUSPEND = 0;
-    if (USB_MIS_ST & bUMS_SUSPEND) { // Suspend
-
-      // while ( XBUS_AUX & bUART0_TX );                    // Wait for Tx
-      // SAFE_MOD = 0x55;
-      // SAFE_MOD = 0xAA;
-      // WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;    // Wake up by USB or RxD0
-      // PCON |= PD; // Chip sleep SAFE_MOD = 0x55; SAFE_MOD = 0xAA; WAKE_CTRL =
-      // 0x00;
-
+    if (USB_MIS_ST & bUMS_SUSPEND) { // Enable suspend.
+#if 1
+    	USBStartSuspend();	// call main sketch to turn off LED.
+			SAFE_MOD = 0x55;
+			SAFE_MOD = 0xAA;
+			WAKE_CTRL = bWAK_BY_USB;    // Wake up by USB or RxD0
+      PCON |= PD;
+#endif
     } else {             // Unexpected interrupt, not supposed to happen !
       USB_INT_FG = 0xFF; // Clear interrupt flag
     }

@@ -48,6 +48,12 @@ void numLock_Led(uint8_t on) {
 	else
 		P1 &= 0xfd;	
 }
+
+// called from USBhandler
+void USBStartSuspend() {
+	P1 &= 0xfd;	
+}
+
 // Clarity is important
 void setup() {
 	usbhid_init();

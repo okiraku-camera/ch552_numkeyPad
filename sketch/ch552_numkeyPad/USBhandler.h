@@ -62,4 +62,6 @@ void USBDeviceCfg();
 void USBDeviceIntCfg();
 void USBDeviceEndPointCfg();
 
+void USBStartSuspend();	// notify power down.
+
 #endif
