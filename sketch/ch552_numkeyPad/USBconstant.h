@@ -6,11 +6,11 @@
  */
 
 
-// WITH_MODIFIER apecifies leave or remove the modifiers area from input report.
+// WITH_MODIFIER specifies leave or remove the modifiers area from input report descriptor.
 #if defined(WITH_MODIFIERS)
 #undef WITH_MODIFIERS
-// #define WITH_MODIFIERS
 #endif
+// #define WITH_MODIFIERS
 
 // clang-format off
 #include <stdint.h>
