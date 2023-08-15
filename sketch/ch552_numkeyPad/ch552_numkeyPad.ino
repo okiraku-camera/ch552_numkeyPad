@@ -8,13 +8,11 @@
  */
 #include "usbCommonDescriptors/HIDClassCommon.h"
 #include "ch552_usbhid.h"
-static const uint8_t max_scancode = 20;
-const uint8_t numlock_led = 11;
+
+#define numlock_led  11
 const uint8_t cols[] = {14, 15, 16, 17};
 const uint8_t rows[] = {30, 31, 32, 33, 34};
 const uint8_t row_masks[] = {1, 2, 4, 8, 0x10};
-
-uint8_t numlock_led_state = 0;
 
 // scancode to HID Usage ID table.
 // these codes are defined in HIDClassCommon.h of ch55xDuino
@@ -41,14 +39,6 @@ static const uint8_t scan_to_hid[] = {			// scan hid
 	0																					// 20
 };
 
-// NumLock led connected to P1.1 
-void numLock_Led(uint8_t on) {
-	if (on)
-		P1 |= 2;
-	else
-		P1 &= 0xfd;	
-}
-
 // called from USBhandler
 void USBStartSuspend() {
 	P1 &= 0xfd;	
@@ -57,7 +47,6 @@ void USBStartSuspend() {
 // Clarity is important
 void setup() {
 	usbhid_init();
-	
 	pinMode(numlock_led, OUTPUT);
 	digitalWrite(numlock_led, 0);
 	for(uint8_t i = 0; i < sizeof(cols); i++)
@@ -69,7 +58,7 @@ void setup() {
 }
 
 void key_event(uint8_t c, uint8_t state){
-	if (c < 1 || c >= max_scancode )
+	if (c < 1 || c > sizeof(scan_to_hid) )
 		return;
 	uint8_t hidcode = scan_to_hid[c - 1];
 
@@ -83,16 +72,16 @@ void key_event(uint8_t c, uint8_t state){
 static uint8_t last_stable[scan_bytes];
 static uint8_t last_scan[scan_bytes];
 void scan() {
-	uint8_t keys[scan_bytes];
-	uint8_t key = 0;
-	uint8_t n = 0xff;
+	__data uint8_t keys[scan_bytes];
+	__data uint8_t key = 0;
+	__data uint8_t n = 0xff;
 	for(uint8_t row = 0; row < sizeof(rows); row++) {
-		if (row & 1) {
+		if (row & 1) {	// odd number row
 			P3 &= ~row_masks[row];
 			n |= (P1 & 0xf0);
 			P3 |= row_masks[row];
 			keys[key++] = ~n;
-		} else {
+		} else {				// even number row
 			P3 &= ~row_masks[row];
 			n = (P1 & 0xf0) >> 4;
 			P3 |= row_masks[row];
@@ -123,9 +112,18 @@ void scan() {
 	}
 }
 
+// NumLock led connected to P1.1 
+#define NUMLOCK_LED_MASK  2
+
 void loop() {
+	static uint8_t led_counter = 0;
 	scan();
-	delay(10);	// scan interval.  
-	numlock_led_state = get_hid_ledstate() & HID_KEYBOARD_LED_NUMLOCK;
-	numLock_Led(numlock_led_state);
+	delay(10);	// scan interval.
+	if (++led_counter > 10){ // check LED state every 100msec.
+		led_counter = 0;
+		if (get_hid_ledstate() & HID_KEYBOARD_LED_NUMLOCK)
+			P1 |= NUMLOCK_LED_MASK;
+		else
+			P1 &= ~NUMLOCK_LED_MASK;
+	}  
 }
