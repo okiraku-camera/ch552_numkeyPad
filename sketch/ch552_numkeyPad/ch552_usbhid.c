@@ -19,7 +19,8 @@ volatile __xdata uint8_t UpPoint1_Busy = 0;
 	#define report_size	6
 	#define report_start_index	0
 #endif
-uint8_t hid_report[report_size];
+
+__data uint8_t hid_report[report_size];
 
 void delayMicroseconds(uint16_t us);
 
