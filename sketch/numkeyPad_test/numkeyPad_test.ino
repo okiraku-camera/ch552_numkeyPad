@@ -55,8 +55,13 @@ void setup() {
 
 static const char hex[] = "0123456789ABCDEF";
 void print_hex(uint8_t b) {
+#if 0
 	USBSerial_print_c(hex[(b & 0xf0) >> 4]);
 	USBSerial_print_c(hex[b & 0x0f]);
+#else
+	USBSerial_print(hex[(b & 0xf0) >> 4]);
+	USBSerial_print(hex[b & 0x0f]);
+#endif
 }
 
 void key_event(uint8_t c, uint8_t state){
@@ -64,10 +69,15 @@ void key_event(uint8_t c, uint8_t state){
 		return;
 	uint8_t hidcode = scan_to_hid[c - 1];
 	print_hex(hidcode);
+#if 0
 	USBSerial_print_s(" , ");
 	USBSerial_print_i(state);
 	USBSerial_println_only();
-
+#else
+	USBSerial_print(" , ");
+	USBSerial_print(state);
+	USBSerial_println();
+#endif
 	if (state && hidcode == HID_KEYBOARD_SC_NUM_LOCK) {
 		numlock_led_state ^= 1;
 		numLock_Led(numlock_led_state);
