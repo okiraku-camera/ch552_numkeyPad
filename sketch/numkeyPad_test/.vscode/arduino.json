@@ -1,5 +1,6 @@
 {
     "configuration": "clock=24internal,usb_settings=usbcdc,upload_method=usb",
     "board": "CH55xDuino:mcs51:ch552",
-    "sketch": "..\\numkeyPad_test\\numkeyPad_test.ino"
+    "sketch": "..\\numkeyPad_test\\numkeyPad_test.ino",
+    "port": "COM22"
 }
