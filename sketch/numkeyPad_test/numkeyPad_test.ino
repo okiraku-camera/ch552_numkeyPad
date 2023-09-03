@@ -1,7 +1,9 @@
 #include "usbCommonDescriptors/HIDClassCommon.h"
 
-static const uint8_t max_scancode = 20;
-const uint8_t numlock_led = 11;
+//static const uint8_t max_scancode = 20;
+//const uint8_t numlock_led = 11;
+#define max_scancode  20
+#define numlock_led  11
 const uint8_t cols[] = {14, 15, 16, 17};
 const uint8_t rows[] = {30, 31, 32, 33, 34};
 const uint8_t row_masks[] = {1, 2, 4, 8, 0x10};
@@ -89,6 +91,20 @@ static uint8_t last_scan[3];
 void scan() {
 	uint8_t keys[3];
 	uint8_t key = 0;
+#if 0
+	for(uint8_t row = 0; row < sizeof(rows); row++) {
+			digitalWrite(rows[row], 0);
+			uint8_t n = 0;
+			for (uint8_t col = 0; col < sizeof(cols); col++)
+				n |= (digitalRead(cols[col]) << col);
+			digitalWrite(rows[row], 1);
+			if (row & 1) {
+				n <<= 4;
+				keys[key++] |= (~n & 0xf0); 
+			} else
+				keys[key] = ~n & 0x0f;
+	}
+#else
 	uint8_t n = 0xff;
 	for(uint8_t row = 0; row < sizeof(rows); row++) {
 		if (row & 1) {
@@ -103,7 +119,9 @@ void scan() {
 		}
 	}
 	n |= 0xf0;
-	keys[key] = ~n;	// row = 5.
+	keys[key] = ~n;	// last row.
+
+#endif
 	// check if current result and prev result are match.
 	n = 0;;
 	for(uint8_t i = 0; i < sizeof(keys); i++) {
