@@ -57,11 +57,10 @@ void setup() {
 	}
 }
 
-void key_event(uint8_t c, uint8_t state){
-	if (c < 1 || c > sizeof(scan_to_hid) )
+void key_event(uint8_t switch_num, uint8_t state){
+	if (switch_num < 1 || switch_num > sizeof(scan_to_hid) )
 		return;
-	uint8_t hidcode = scan_to_hid[c - 1];
-
+	uint8_t hidcode = scan_to_hid[switch_num - 1];
 	if (state) 
 		report_press(hidcode);
 	else
@@ -74,23 +73,16 @@ static uint8_t last_scan[scan_bytes];
 void scan() {
 	__data uint8_t keys[scan_bytes];
 	__data uint8_t key = 0;
-	__data uint8_t n = 0xff;
 	for(uint8_t row = 0; row < sizeof(rows); row++) {
-		if (row & 1) {	// odd number row
-			P3 &= ~row_masks[row];
-			n |= (P1 & 0xf0);
-			P3 |= row_masks[row];
-			keys[key++] = ~n;
-		} else {				// even number row
-			P3 &= ~row_masks[row];
-			n = (P1 & 0xf0) >> 4;
-			P3 |= row_masks[row];
-		}
+		P3 &= ~row_masks[row];		// select a row.
+		if (row & 1)
+			keys[key++] |= (~P1 & 0xf0);
+		else
+			keys[key] = (~P1 >> 4) & 0x0f;
+		P3 |= row_masks[row];		// unselect a row.
 	}
-	n |= 0xf0;
-	keys[key] = ~n;	// row = 5.
 	
-	n = 0;;
+	uint8_t n = 0;
 	for(uint8_t i = 0; i < sizeof(keys); i++) {
 		// check if current and prev scan results are match.
 		if (last_scan[i] != keys[i])
@@ -100,7 +92,6 @@ void scan() {
 	if (n)
 		return;	// no match. may be de-bounced.
 
-	n = 0;	
 	for(key = 0; key < sizeof(keys); key++, n += 8) {
 		uint8_t changes = keys[key] ^ last_stable[key];
 		last_stable[key] = keys[key];	// save last-stable state.
