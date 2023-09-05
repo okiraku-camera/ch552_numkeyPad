@@ -66,10 +66,10 @@ void print_hex(uint8_t b) {
 #endif
 }
 
-void key_event(uint8_t c, uint8_t state){
-	if (c < 1 || c >= max_scancode )
+void key_event(uint8_t switch_num, uint8_t state) {
+	if (switch_num < 1 || switch_num >= max_scancode )
 		return;
-	uint8_t hidcode = scan_to_hid[c - 1];
+	uint8_t hidcode = scan_to_hid[switch_num - 1];
 	print_hex(hidcode);
 #if 0
 	USBSerial_print_s(" , ");
@@ -91,39 +91,32 @@ static uint8_t last_scan[3];
 void scan() {
 	uint8_t keys[3];
 	uint8_t key = 0;
+	uint8_t n = 0;
 #if 0
 	for(uint8_t row = 0; row < sizeof(rows); row++) {
-			digitalWrite(rows[row], 0);
-			uint8_t n = 0;
-			for (uint8_t col = 0; col < sizeof(cols); col++)
-				n |= (digitalRead(cols[col]) << col);
-			digitalWrite(rows[row], 1);
-			if (row & 1) {
-				n <<= 4;
-				keys[key++] |= (~n & 0xf0); 
-			} else
-				keys[key] = ~n & 0x0f;
+		digitalWrite(rows[row], 0);	// select a row
+		n = 0;
+		for (uint8_t col = 0; col < sizeof(cols); col++) // read all cols.
+			n |= (digitalRead(cols[col]) << col);
+		if (row & 1)
+			keys[key++] |= (~(n << 4) & 0xf0); 
+		else
+			keys[key] = ~n & 0x0f;
+		digitalWrite(rows[row], 1);	// unselect a row.
 	}
 #else
-	uint8_t n = 0xff;
 	for(uint8_t row = 0; row < sizeof(rows); row++) {
-		if (row & 1) {
-			P3 &= ~row_masks[row];
-			n |= (P1 & 0xf0);
-			P3 |= row_masks[row];
-			keys[key++] = ~n;
-		} else {
-			P3 &= ~row_masks[row];
-			n = (P1 & 0xf0) >> 4;
-			P3 |= row_masks[row];
-		}
+		P3 &= ~row_masks[row];		// select a row.
+		if (row & 1)
+			keys[key++] |= (~P1 & 0xf0);
+		else
+			keys[key] = (~P1 >> 4) & 0x0f;
+		P3 |= row_masks[row];		// unselect a row.
 	}
-	n |= 0xf0;
-	keys[key] = ~n;	// last row.
 
 #endif
 	// check if current result and prev result are match.
-	n = 0;;
+	n = 0;
 	for(uint8_t i = 0; i < sizeof(keys); i++) {
 		if (last_scan[i] != keys[i])
 			n++;
